@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,12 +10,18 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <style>
         :root {
-            --color-primary: #005BAE;  /* Azul SGR */
-            --color-secondary: #FFD700; /* Amarillo */
-            --color-light: #FFFFFF;     /* Blanco */
-            --color-danger: #DC3545;    /* Rojo para riesgos */
-            --color-success: #28a745;   /* Verde */
+            --color-primary: #005BAE;
+            /* Azul SGR */
+            --color-secondary: #FFD700;
+            /* Amarillo */
+            --color-light: #FFFFFF;
+            /* Blanco */
+            --color-danger: #DC3545;
+            /* Rojo para riesgos */
+            --color-success: #28a745;
+            /* Verde */
         }
+
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
@@ -22,6 +29,7 @@
             background-color: #F5F7FA;
             color: #333;
         }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -31,31 +39,37 @@
             overflow: hidden;
             border: 1px solid var(--color-primary);
         }
+
         header {
             background: linear-gradient(135deg, var(--color-primary) 0%, #003366 100%);
             color: white;
             padding: 20px;
             text-align: center;
         }
+
         .logo-sgr {
             height: 70px;
             margin-bottom: 10px;
         }
+
         h1 {
             margin: 0;
             font-size: 1.8rem;
             text-transform: uppercase;
         }
+
         .paso {
             padding: 25px;
             border-bottom: 1px solid #eee;
         }
+
         .paso h2 {
             color: var(--color-primary);
             display: flex;
             align-items: center;
             margin-top: 0;
         }
+
         .paso h2 span {
             background-color: var(--color-primary);
             color: white;
@@ -68,6 +82,7 @@
             margin-right: 12px;
             font-weight: bold;
         }
+
         .info-box {
             background-color: rgba(255, 215, 0, 0.15);
             border-left: 4px solid var(--color-secondary);
@@ -75,16 +90,21 @@
             margin-bottom: 20px;
             border-radius: 0 8px 8px 0;
         }
+
         .form-group {
             margin-bottom: 20px;
         }
+
         label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
             color: var(--color-primary);
         }
-        input, select, textarea {
+
+        input,
+        select,
+        textarea {
             width: 100%;
             padding: 12px;
             border: 1px solid #ddd;
@@ -92,6 +112,7 @@
             font-size: 16px;
             margin-bottom: 5px;
         }
+
         button {
             background-color: var(--color-primary);
             color: white;
@@ -104,58 +125,71 @@
             transition: all 0.3s;
             margin: 10px 5px;
         }
+
         button:hover {
             background-color: #004494;
             transform: translateY(-2px);
         }
+
         /* Mapas */
         .map-container {
             display: flex;
             gap: 20px;
             margin: 20px 0;
         }
+
         .map {
             height: 400px;
             flex: 1;
             border-radius: 8px;
             border: 2px solid var(--color-primary);
         }
+
         /* Tablas */
         .table-container {
             overflow-x: auto;
             margin: 20px 0;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
         }
+
         th {
             background-color: var(--color-primary);
             color: white;
             padding: 12px;
             text-align: left;
         }
+
         td {
             padding: 10px;
             border-bottom: 1px solid #eee;
         }
+
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+
         .btn-add {
             background-color: var(--color-secondary);
             color: #333;
         }
+
         .btn-danger {
             background-color: var(--color-danger);
         }
+
         .btn-success {
             background-color: var(--color-success);
         }
+
         .hidden {
             display: none;
         }
+
         footer {
             text-align: center;
             padding: 15px;
@@ -163,20 +197,24 @@
             color: white;
             font-size: 14px;
         }
+
         .required::after {
             content: " *";
             color: var(--color-danger);
         }
+
         .risk-map-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
+
         .risk-options {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 10px;
         }
+
         .risk-option {
             padding: 10px;
             border: 1px solid #ddd;
@@ -184,22 +222,27 @@
             cursor: pointer;
             transition: all 0.3s;
         }
+
         .risk-option:hover {
             background-color: #f0f8ff;
         }
+
         .risk-option.selected {
             background-color: #ffe8e8;
             border-color: var(--color-danger);
         }
+
         .risk-icon {
             font-size: 20px;
             margin-right: 5px;
         }
+
         .checklist {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 10px;
         }
+
         .checklist-item {
             display: flex;
             align-items: center;
@@ -207,10 +250,12 @@
             border: 1px solid #ddd;
             border-radius: 4px;
         }
+
         .checklist-item input {
             width: auto;
             margin-right: 10px;
         }
+
         .section-title {
             color: var(--color-primary);
             border-bottom: 2px solid var(--color-secondary);
@@ -219,20 +264,23 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
-            <img src="https://www.gestionderiesgos.gob.ec/wp-content/uploads/2020/04/logo-SGR.png" alt="Logo SGR" class="logo-sgr">
-            <h1>PLAN FAMILIAR INTEGRAL DE EMERGENCIAS</h1>
+            <img src="https://www.gestionderiesgos.gob.ec/wp-content/uploads/2020/04/logo-SGR.png" alt="Logo GAD loja"
+                class="logo-sgr">
+            <h1>PLAN FAMILIAR DE EMERGENCIAS</h1>
         </header>
 
         <!-- Paso 0: Información Básica de la Familia -->
         <section id="paso0" class="paso">
             <h2><span>0</span> Información Básica de la Familia</h2>
             <div class="info-box">
-                <strong>📌 Datos esenciales:</strong> Esta información será vital para contactar a tu familia en caso de emergencia.
+                <strong>📌 Datos esenciales:</strong> Esta información será vital para contactar a tu familia en caso de
+                emergencia.
             </div>
-            
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div class="form-group">
                     <label class="required">Apellidos Familiares:</label>
@@ -243,7 +291,6 @@
                     <input type="text" id="direccion-familia" placeholder="Ej: Av. Amazonas N12-34 y Av. Patria">
                 </div>
             </div>
-            
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div class="form-group">
                     <label class="required">Teléfono celular principal:</label>
@@ -254,12 +301,24 @@
                     <input type="tel" id="telefono-convencional" placeholder="Ej: 022345678">
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label>Ubicación (barrio/sector):</label>
                 <input type="text" id="ubicacion-familia" placeholder="Ej: Barrio La Floresta, sector norte">
             </div>
-            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="required">año de permiso de construcción:</label>
+                    <input type="date" id="año-permiso">
+                </div>
+                <div class="form-group">
+                    <label>Código de permiso de construcción:</label>
+                    <input type="tel" id="codigo-permiso" placeholder="Ej: Abc123">
+                </div>
+                <input type="checkbox" id="item-linterna">
+                <label for="item-linterna">No poseo permiso de construcción</label>
+            </div>
+
             <button onclick="siguientePaso(0)">Continuar →</button>
         </section>
 
@@ -267,9 +326,10 @@
         <section id="paso1" class="paso hidden">
             <h2><span>1</span> Identificación de Amenaza</h2>
             <div class="info-box">
-                <strong>📌 Según la SGR:</strong> Identificar correctamente los riesgos específicos de tu zona reduce en un 70% los daños durante emergencias.
+                <strong>📌 Recomendación</strong> Identificar correctamente los riesgos específicos de tu zona reduce en
+                un 70% los daños durante emergencias.
             </div>
-            
+
             <div class="risk-map-container">
                 <div>
                     <label class="required">Selecciona los riesgos de tu zona:</label>
@@ -306,22 +366,23 @@
                     <div id="map-riesgos" class="map"></div>
                 </div>
             </div>
-            
+            <button onclick="siguientePaso(0)">Regresar ←</button>
             <button onclick="siguientePaso(1)">Continuar →</button>
+
         </section>
 
         <!-- Paso 2: Mapeo de Ubicaciones -->
         <section id="paso2" class="paso hidden">
             <h2><span>2</span> Mapeo de Ubicaciones</h2>
             <div class="info-box">
-                <strong>ℹ️ Instrucciones:</strong> 
+                <strong>ℹ️ Instrucciones:</strong>
                 <ol>
                     <li>Haz clic en el mapa para marcar ubicaciones importantes</li>
                     <li>Selecciona el tipo de punto en el desplegable</li>
                     <li>Completa la información requerida</li>
                 </ol>
             </div>
-            
+
             <div class="map-container">
                 <div style="flex: 2;">
                     <div id="map-ubicaciones" class="map"></div>
@@ -345,9 +406,10 @@
                     <button class="btn-add" onclick="mostrarFormularioPunto()">➕ Agregar Punto</button>
                 </div>
             </div>
-            
+
             <!-- Formulario flotante para agregar puntos -->
-            <div id="form-punto" class="hidden" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--color-primary);">
+            <div id="form-punto" class="hidden"
+                style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--color-primary);">
                 <h3>Agregar Punto</h3>
                 <div class="form-group">
                     <label class="required">Tipo de punto:</label>
@@ -376,7 +438,8 @@
                 <button onclick="guardarPunto()">Guardar Punto</button>
                 <button class="btn-danger" onclick="ocultarFormularioPunto()">Cancelar</button>
             </div>
-            
+
+            <button onclick="siguientePaso(1)">Regresar ←</button>
             <button onclick="siguientePaso(2)">Continuar →</button>
         </section>
 
@@ -384,9 +447,10 @@
         <section id="paso3" class="paso hidden">
             <h2><span>3</span> Integrantes Familiares</h2>
             <div class="info-box">
-                <strong>📌 Importante:</strong> Incluye a todos los miembros del hogar, especialmente niños, adultos mayores y personas con discapacidad.
+                <strong>📌 Importante:</strong> Incluye a todos los miembros del hogar, especialmente niños, adultos
+                mayores y personas con discapacidad.
             </div>
-            
+
             <div class="table-container">
                 <table id="tabla-familia">
                     <thead>
@@ -407,9 +471,10 @@
                 </table>
             </div>
             <button class="btn-add" onclick="mostrarFormularioFamiliar()">➕ Agregar Familiar</button>
-            
+
             <!-- Formulario flotante para familiares -->
-            <div id="form-familiar" class="hidden" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--color-primary);">
+            <div id="form-familiar" class="hidden"
+                style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--color-primary);">
                 <h3>Agregar Integrante Familiar</h3>
                 <div class="form-group">
                     <label class="required">Nombre completo:</label>
@@ -456,12 +521,13 @@
                 </div>
                 <div class="form-group">
                     <label>Medicamentos y dosis:</label>
-                    <textarea id="medicamentos-familiar" placeholder="Ej: Insulina - 20 unidades cada 8 horas"></textarea>
+                    <textarea id="medicamentos-familiar"
+                        placeholder="Ej: Insulina - 20 unidades cada 8 horas"></textarea>
                 </div>
                 <button onclick="guardarFamiliar()">Guardar Integrante</button>
                 <button class="btn-danger" onclick="ocultarFormularioFamiliar()">Cancelar</button>
             </div>
-            
+
             <button onclick="siguientePaso(3)">Continuar →</button>
         </section>
 
@@ -469,9 +535,10 @@
         <section id="paso4" class="paso hidden">
             <h2><span>4</span> Mascotas de la Familia</h2>
             <div class="info-box">
-                <strong>🐾 No olvides a tus mascotas:</strong> En emergencias, ellos también necesitan protección y cuidados especiales.
+                <strong>🐾 No olvides a tus mascotas:</strong> En emergencias, ellos también necesitan protección y
+                cuidados especiales.
             </div>
-            
+
             <div class="table-container">
                 <table id="tabla-mascotas">
                     <thead>
@@ -490,9 +557,10 @@
                 </table>
             </div>
             <button class="btn-add" onclick="mostrarFormularioMascota()">➕ Agregar Mascota</button>
-            
+
             <!-- Formulario flotante para mascotas -->
-            <div id="form-mascota" class="hidden" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--color-primary);">
+            <div id="form-mascota" class="hidden"
+                style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--color-primary);">
                 <h3>Agregar Mascota</h3>
                 <div class="form-group">
                     <label class="required">Nombre:</label>
@@ -529,12 +597,13 @@
                 </div>
                 <div class="form-group">
                     <label>Notas importantes:</label>
-                    <textarea id="notas-mascota" placeholder="Ej: Tiene alergia a ciertos alimentos, necesita medicamento cada 12 horas"></textarea>
+                    <textarea id="notas-mascota"
+                        placeholder="Ej: Tiene alergia a ciertos alimentos, necesita medicamento cada 12 horas"></textarea>
                 </div>
                 <button onclick="guardarMascota()">Guardar Mascota</button>
                 <button class="btn-danger" onclick="ocultarFormularioMascota()">Cancelar</button>
             </div>
-            
+
             <button onclick="siguientePaso(4)">Continuar →</button>
         </section>
 
@@ -542,9 +611,10 @@
         <section id="paso5" class="paso hidden">
             <h2><span>5</span> Mochila de Emergencia</h2>
             <div class="info-box">
-                <strong>🎒 Recomendación SGR:</strong> Prepara una mochila por cada miembro de la familia y mantenla en lugar accesible. Revisa cada 6 meses.
+                <strong>🎒 Recomendación:</strong> Prepara una mochila por cada miembro de la familia y mantenla en
+                lugar accesible. Revisa cada 6 meses.
             </div>
-            
+
             <h3 class="section-title">Varios</h3>
             <div class="checklist">
                 <div class="checklist-item">
@@ -600,7 +670,7 @@
                     <label for="item-radio">Radio portátil</label>
                 </div>
             </div>
-            
+
             <h3 class="section-title">Kit de Aseo</h3>
             <div class="checklist">
                 <div class="checklist-item">
@@ -636,7 +706,7 @@
                     <label for="item-cepillo">Cepillo dental</label>
                 </div>
             </div>
-            
+
             <h3 class="section-title">Botiquín</h3>
             <div class="checklist">
                 <div class="checklist-item">
@@ -680,12 +750,13 @@
                     <label for="item-medicamentos">Medicamentos de uso regular</label>
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label>Otros elementos importantes para tu familia:</label>
-                <textarea id="otros-elementos" placeholder="Ej: Medicamentos específicos, fórmula infantil, etc."></textarea>
+                <textarea id="otros-elementos"
+                    placeholder="Ej: Medicamentos específicos, fórmula infantil, etc."></textarea>
             </div>
-            
+
             <button onclick="siguientePaso(5)">Continuar →</button>
         </section>
 
@@ -693,9 +764,10 @@
         <section id="paso6" class="paso hidden">
             <h2><span>6</span> Vulnerabilidad de la Vivienda</h2>
             <div class="info-box">
-                <strong>🔍 Evaluación:</strong> Identifica las áreas más vulnerables de tu vivienda y las acciones para reducir riesgos.
+                <strong>🔍 Evaluación:</strong> Identifica las áreas más vulnerables de tu vivienda y las acciones para
+                reducir riesgos.
             </div>
-            
+
             <div class="table-container">
                 <table id="tabla-vulnerabilidad">
                     <thead>
@@ -713,9 +785,10 @@
                 </table>
             </div>
             <button class="btn-add" onclick="mostrarFormularioVulnerabilidad()">➕ Agregar Área</button>
-            
+
             <!-- Formulario flotante para vulnerabilidad -->
-            <div id="form-vulnerabilidad" class="hidden" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--color-primary);">
+            <div id="form-vulnerabilidad" class="hidden"
+                style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--color-primary);">
                 <h3>Evaluar Área de la Vivienda</h3>
                 <div class="form-group">
                     <label class="required">Espacio físico:</label>
@@ -732,11 +805,13 @@
                 </div>
                 <div class="form-group">
                     <label class="required">Vulnerabilidades identificadas:</label>
-                    <textarea id="vulnerabilidades" placeholder="Ej: Ventanas grandes sin protección sísmica, cables eléctricos expuestos"></textarea>
+                    <textarea id="vulnerabilidades"
+                        placeholder="Ej: Ventanas grandes sin protección sísmica, cables eléctricos expuestos"></textarea>
                 </div>
                 <div class="form-group">
                     <label class="required">Acciones para reducir vulnerabilidad:</label>
-                    <textarea id="acciones-vulnerabilidad" placeholder="Ej: Instalar film de seguridad en ventanas, reorganizar cables"></textarea>
+                    <textarea id="acciones-vulnerabilidad"
+                        placeholder="Ej: Instalar film de seguridad en ventanas, reorganizar cables"></textarea>
                 </div>
                 <div class="form-group">
                     <label>Prioridad:</label>
@@ -749,7 +824,7 @@
                 <button onclick="guardarVulnerabilidad()">Guardar Evaluación</button>
                 <button class="btn-danger" onclick="ocultarFormularioVulnerabilidad()">Cancelar</button>
             </div>
-            
+
             <button onclick="siguientePaso(6)">Continuar →</button>
         </section>
 
@@ -757,44 +832,59 @@
         <section id="paso7" class="paso hidden">
             <h2><span>7</span> Resumen del Plan Familiar</h2>
             <div class="info-box" style="background-color: #d4edda; border-left-color: #28a745;">
-                <strong>✅ Plan Completo:</strong> Revisa toda la información antes de guardar. Puedes imprimir este plan para tenerlo físicamente.
+                <strong>✅ Plan Completo:</strong> Revisa toda la información antes de guardar. Puedes imprimir este plan
+                para tenerlo físicamente.
             </div>
-            
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div>
                     <h3 style="color: var(--color-primary);">Información Familiar</h3>
-                    <div id="resumen-familia" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
-                    
+                    <div id="resumen-familia"
+                        style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    </div>
+
                     <h3 style="color: var(--color-primary);">Integrantes</h3>
-                    <div id="resumen-integrantes" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
-                    
+                    <div id="resumen-integrantes"
+                        style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    </div>
+
                     <h3 style="color: var(--color-primary);">Mascotas</h3>
-                    <div id="resumen-mascotas" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
+                    <div id="resumen-mascotas"
+                        style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    </div>
                 </div>
                 <div>
                     <h3 style="color: var(--color-primary);">Mapa de Ubicaciones</h3>
                     <div id="map-resumen" class="map" style="height: 300px; margin-bottom: 20px;"></div>
-                    
-                    <h3 style="color: var(--color-primary);">Riesgos Identificados</h3>
-                    <div id="resumen-riesgos" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
-                    
+
+                    <h3 style="color: var(--color-primary);">Amenazas Identificadas</h3>
+                    <div id="resumen-riesgos"
+                        style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    </div>
+
                     <h3 style="color: var(--color-primary);">Vulnerabilidades Principales</h3>
-                    <div id="resumen-vulnerabilidad" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px;"></div>
+                    <div id="resumen-vulnerabilidad"
+                        style="background-color: #f8f9fa; padding: 15px; border-radius: 8px;"></div>
                 </div>
             </div>
-            
+
             <h3 style="color: var(--color-primary); margin-top: 20px;">Mochila de Emergencia</h3>
-            <div id="resumen-mochila" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
-            
+            <div id="resumen-mochila"
+                style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
+
             <div style="margin-top: 30px; display: flex; justify-content: space-between;">
-                <button onclick="window.print()" style="background-color: var(--color-secondary); color: #333;">🖨️ Imprimir Plan</button>
-                <button onclick="guardarPlanCompleto()" style="background-color: var(--color-success);">💾 Guardar Plan Definitivo</button>
+                <button onclick="window.print()" style="background-color: var(--color-secondary); color: #333;">🖨️
+                    Imprimir Plan</button>
+                <button onclick="guardarPlanCompleto()" style="background-color: var(--color-success);">💾 Guardar Plan
+                    Definitivo</button>
             </div>
         </section>
 
         <footer>
-            © 2023 Municipio de Loja - Coordinación de gestión de riesgos - Ecuador- Loja | 
-            <a href="https://www.gestionderiesgos.gob.ec" style="color: var(--color-secondary); text-decoration: none;">Visita nuestro sitio web</a>
+            © 2025 Municipio de Loja - Coordinación de gestión de riesgos | Ing Millan paul Alverca Gaona | Ecuador-
+            Loja |
+            <a href="https://www.gestionderiesgos.gob.ec"
+                style="color: var(--color-secondary); text-decoration: none;">Visita nuestro sitio web</a>
         </footer>
     </div>
 
@@ -803,4 +893,5 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>
