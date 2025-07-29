@@ -94,7 +94,6 @@
                 .bindPopup(`<b>${zona.nombre}</b>`);
             });
         }
-        
         function getColorForRisk(tipo) {
             const colors = {
                 'sismo': '#ff0000',
