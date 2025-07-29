@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan Familiar Integral de Emergencias - SGR Ecuador</title>
+    <!-- Leaflet CSS + Plugins -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <style>
+        :root {
+            --color-primary: #005BAE;  /* Azul SGR */
+            --color-secondary: #FFD700; /* Amarillo */
+            --color-light: #FFFFFF;     /* Blanco */
+            --color-danger: #DC3545;    /* Rojo para riesgos */
+            --color-success: #28a745;   /* Verde */
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #F5F7FA;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--color-light);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 91, 174, 0.1);
+            overflow: hidden;
+            border: 1px solid var(--color-primary);
+        }
+        header {
+            background: linear-gradient(135deg, var(--color-primary) 0%, #003366 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .logo-sgr {
+            height: 70px;
+            margin-bottom: 10px;
+        }
+        h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            text-transform: uppercase;
+        }
+        .paso {
+            padding: 25px;
+            border-bottom: 1px solid #eee;
+        }
+        .paso h2 {
+            color: var(--color-primary);
+            display: flex;
+            align-items: center;
+            margin-top: 0;
+        }
+        .paso h2 span {
+            background-color: var(--color-primary);
+            color: white;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 12px;
+            font-weight: bold;
+        }
+        .info-box {
+            background-color: rgba(255, 215, 0, 0.15);
+            border-left: 4px solid var(--color-secondary);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        button {
+            background-color: var(--color-primary);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #004494;
+            transform: translateY(-2px);
+        }
+        /* Mapas */
+        .map-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .map {
+            height: 400px;
+            flex: 1;
+            border-radius: 8px;
+            border: 2px solid var(--color-primary);
+        }
+        /* Tablas */
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background-color: var(--color-primary);
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .btn-add {
+            background-color: var(--color-secondary);
+            color: #333;
+        }
+        .btn-danger {
+            background-color: var(--color-danger);
+        }
+        .btn-success {
+            background-color: var(--color-success);
+        }
+        .hidden {
+            display: none;
+        }
+        footer {
+            text-align: center;
+            padding: 15px;
+            background-color: var(--color-primary);
+            color: white;
+            font-size: 14px;
+        }
+        .required::after {
+            content: " *";
+            color: var(--color-danger);
+        }
+        .risk-map-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .risk-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .risk-option {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .risk-option:hover {
+            background-color: #f0f8ff;
+        }
+        .risk-option.selected {
+            background-color: #ffe8e8;
+            border-color: var(--color-danger);
+        }
+        .risk-icon {
+            font-size: 20px;
+            margin-right: 5px;
+        }
+        .checklist {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+        }
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .checklist-item input {
+            width: auto;
+            margin-right: 10px;
+        }
+        .section-title {
+            color: var(--color-primary);
+            border-bottom: 2px solid var(--color-secondary);
+            padding-bottom: 5px;
+            margin-top: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="https://www.gestionderiesgos.gob.ec/wp-content/uploads/2020/04/logo-SGR.png" alt="Logo SGR" class="logo-sgr">
+            <h1>PLAN FAMILIAR INTEGRAL DE EMERGENCIAS</h1>
+        </header>
+
+        <!-- Paso 0: Información Básica de la Familia -->
+        <section id="paso0" class="paso">
+            <h2><span>0</span> Información Básica de la Familia</h2>
+            <div class="info-box">
+                <strong>📌 Datos esenciales:</strong> Esta información será vital para contactar a tu familia en caso de emergencia.
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="required">Apellidos Familiares:</label>
+                    <input type="text" id="apellidos-familia" placeholder="Ej: Pérez González">
+                </div>
+                <div class="form-group">
+                    <label class="required">Dirección exacta:</label>
+                    <input type="text" id="direccion-familia" placeholder="Ej: Av. Amazonas N12-34 y Av. Patria">
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label class="required">Teléfono celular principal:</label>
+                    <input type="tel" id="telefono-celular" placeholder="Ej: 0987654321">
+                </div>
+                <div class="form-group">
+                    <label>Teléfono convencional:</label>
+                    <input type="tel" id="telefono-convencional" placeholder="Ej: 022345678">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Ubicación (barrio/sector):</label>
+                <input type="text" id="ubicacion-familia" placeholder="Ej: Barrio La Floresta, sector norte">
+            </div>
+            
+            <button onclick="siguientePaso(0)">Continuar →</button>
+        </section>
+
+        <!-- Paso 1: Identificación de Riesgos -->
+        <section id="paso1" class="paso hidden">
+            <h2><span>1</span> Identificación de Riesgos</h2>
+            <div class="info-box">
+                <strong>📌 Según la SGR:</strong> Identificar correctamente los riesgos específicos de tu zona reduce en un 70% los daños durante emergencias.
+            </div>
+            
+            <div class="risk-map-container">
+                <div>
+                    <label class="required">Selecciona los riesgos de tu zona:</label>
+                    <div class="risk-options">
+                        <div class="risk-option" onclick="toggleRisk(this, 'sismo')">
+                            <span class="risk-icon">🌍</span> Sismos/Terremotos
+                        </div>
+                        <div class="risk-option" onclick="toggleRisk(this, 'inundacion')">
+                            <span class="risk-icon">🌊</span> Inundaciones
+                        </div>
+                        <div class="risk-option" onclick="toggleRisk(this, 'volcan')">
+                            <span class="risk-icon">🌋</span> Actividad Volcánica
+                        </div>
+                        <div class="risk-option" onclick="toggleRisk(this, 'deslizamiento')">
+                            <span class="risk-icon">⛰️</span> Movimiento de Ladera
+                        </div>
+                        <div class="risk-option" onclick="toggleRisk(this, 'incendio')">
+                            <span class="risk-icon">🔥</span> Incendios Forestales
+                        </div>
+                        <div class="risk-option" onclick="toggleRisk(this, 'sequia')">
+                            <span class="risk-icon">🏜️</span> Sequía
+                        </div>
+                        <div class="risk-option" onclick="toggleRisk(this, 'tsunami')">
+                            <span class="risk-icon">🌊</span> Tsunami (zona costera)
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Otros riesgos (especificar):</label>
+                        <input type="text" id="otros-riesgos" placeholder="Ej: Accidentes químicos, fallas eléctricas">
+                    </div>
+                </div>
+                <div>
+                    <label>Mapa de amenazas locales:</label>
+                    <div id="map-riesgos" class="map"></div>
+                </div>
+            </div>
+            
+            <button onclick="siguientePaso(1)">Continuar →</button>
+        </section>
+
+        <!-- Paso 2: Mapeo de Ubicaciones -->
+        <section id="paso2" class="paso hidden">
+            <h2><span>2</span> Mapeo de Ubicaciones</h2>
+            <div class="info-box">
+                <strong>ℹ️ Instrucciones:</strong> 
+                <ol>
+                    <li>Haz clic en el mapa para marcar ubicaciones importantes</li>
+                    <li>Selecciona el tipo de punto en el desplegable</li>
+                    <li>Completa la información requerida</li>
+                </ol>
+            </div>
+            
+            <div class="map-container">
+                <div style="flex: 2;">
+                    <div id="map-ubicaciones" class="map"></div>
+                </div>
+                <div style="flex: 1;">
+                    <h3 style="color: var(--color-primary);">Puntos mapeados:</h3>
+                    <div class="table-container">
+                        <table id="tabla-puntos">
+                            <thead>
+                                <tr>
+                                    <th>Tipo</th>
+                                    <th>Nombre</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="puntos-body">
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn-add" onclick="mostrarFormularioPunto()">➕ Agregar Punto</button>
+                </div>
+            </div>
+            
+            <!-- Formulario flotante para agregar puntos -->
+            <div id="form-punto" class="hidden" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--color-primary);">
+                <h3>Agregar Punto</h3>
+                <div class="form-group">
+                    <label class="required">Tipo de punto:</label>
+                    <select id="tipo-punto">
+                        <option value="">Seleccionar...</option>
+                        <option value="vivienda">Vivienda</option>
+                        <option value="hospital">Hospital/Centro Médico</option>
+                        <option value="medico">Médico Familiar</option>
+                        <option value="familiar">Familiar</option>
+                        <option value="seguro">Punto Seguro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="required">Nombre:</label>
+                    <input type="text" id="nombre-punto" placeholder="Ej: Hospital Metropolitano">
+                </div>
+                <div class="form-group">
+                    <label>Teléfono:</label>
+                    <input type="text" id="telefono-punto" placeholder="Ej: 022345678">
+                </div>
+                <div class="form-group">
+                    <label>Dirección exacta:</label>
+                    <input type="text" id="direccion-punto" placeholder="Ej: Av. Mariana de Jesús Oe3-17">
+                </div>
+                <input type="hidden" id="coordenadas-punto">
+                <button onclick="guardarPunto()">Guardar Punto</button>
+                <button class="btn-danger" onclick="ocultarFormularioPunto()">Cancelar</button>
+            </div>
+            
+            <button onclick="siguientePaso(2)">Continuar →</button>
+        </section>
+
+        <!-- Paso 3: Integrantes Familiares -->
+        <section id="paso3" class="paso hidden">
+            <h2><span>3</span> Integrantes Familiares</h2>
+            <div class="info-box">
+                <strong>📌 Importante:</strong> Incluye a todos los miembros del hogar, especialmente niños, adultos mayores y personas con discapacidad.
+            </div>
+            
+            <div class="table-container">
+                <table id="tabla-familia">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Edad</th>
+                            <th>Tipo Sangre</th>
+                            <th>Parentesco</th>
+                            <th>Discapacidad</th>
+                            <th>Responsabilidad</th>
+                            <th>Medicamentos</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="familia-body">
+                        <!-- Se llena dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn-add" onclick="mostrarFormularioFamiliar()">➕ Agregar Familiar</button>
+            
+            <!-- Formulario flotante para familiares -->
+            <div id="form-familiar" class="hidden" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--color-primary);">
+                <h3>Agregar Integrante Familiar</h3>
+                <div class="form-group">
+                    <label class="required">Nombre completo:</label>
+                    <input type="text" id="nombre-familiar" placeholder="Ej: María Guadalupe Pérez">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label class="required">Edad:</label>
+                        <input type="number" id="edad-familiar" min="0" max="120">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de sangre:</label>
+                        <select id="sangre-familiar">
+                            <option value="">Desconocido</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="required">Parentesco:</label>
+                    <select id="parentesco-familiar">
+                        <option value="Padre">Padre</option>
+                        <option value="Madre">Madre</option>
+                        <option value="Hijo/a">Hijo/a</option>
+                        <option value="Abuelo/a">Abuelo/a</option>
+                        <option value="Tío/a">Tío/a</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Discapacidad o condición especial:</label>
+                    <input type="text" id="discapacidad-familiar" placeholder="Ej: Movilidad reducida, diabetes">
+                </div>
+                <div class="form-group">
+                    <label>Responsabilidad en emergencia:</label>
+                    <input type="text" id="responsabilidad-familiar" placeholder="Ej: Llevar mochila de emergencia">
+                </div>
+                <div class="form-group">
+                    <label>Medicamentos y dosis:</label>
+                    <textarea id="medicamentos-familiar" placeholder="Ej: Insulina - 20 unidades cada 8 horas"></textarea>
+                </div>
+                <button onclick="guardarFamiliar()">Guardar Integrante</button>
+                <button class="btn-danger" onclick="ocultarFormularioFamiliar()">Cancelar</button>
+            </div>
+            
+            <button onclick="siguientePaso(3)">Continuar →</button>
+        </section>
+
+        <!-- Paso 4: Mascotas de la Familia -->
+        <section id="paso4" class="paso hidden">
+            <h2><span>4</span> Mascotas de la Familia</h2>
+            <div class="info-box">
+                <strong>🐾 No olvides a tus mascotas:</strong> En emergencias, ellos también necesitan protección y cuidados especiales.
+            </div>
+            
+            <div class="table-container">
+                <table id="tabla-mascotas">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Especie</th>
+                            <th>Edad</th>
+                            <th>Carnet Vacunación</th>
+                            <th>Esterilizado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mascotas-body">
+                        <!-- Se llena dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn-add" onclick="mostrarFormularioMascota()">➕ Agregar Mascota</button>
+            
+            <!-- Formulario flotante para mascotas -->
+            <div id="form-mascota" class="hidden" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--color-primary);">
+                <h3>Agregar Mascota</h3>
+                <div class="form-group">
+                    <label class="required">Nombre:</label>
+                    <input type="text" id="nombre-mascota" placeholder="Ej: Firulais">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label class="required">Especie:</label>
+                        <select id="especie-mascota">
+                            <option value="Perro">Perro</option>
+                            <option value="Gato">Gato</option>
+                            <option value="Ave">Ave</option>
+                            <option value="Roedor">Roedor</option>
+                            <option value="Reptil">Reptil</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Edad (años):</label>
+                        <input type="number" id="edad-mascota" min="0" max="50">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Número de carnet de vacunación:</label>
+                    <input type="text" id="carnet-mascota" placeholder="Ej: 123-456-789">
+                </div>
+                <div class="form-group">
+                    <label>Esterilizado:</label>
+                    <div style="display: flex; gap: 15px;">
+                        <label><input type="radio" name="esterilizado" value="Sí"> Sí</label>
+                        <label><input type="radio" name="esterilizado" value="No" checked> No</label>
+                        <label><input type="radio" name="esterilizado" value="Desconocido"> Desconocido</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notas importantes:</label>
+                    <textarea id="notas-mascota" placeholder="Ej: Tiene alergia a ciertos alimentos, necesita medicamento cada 12 horas"></textarea>
+                </div>
+                <button onclick="guardarMascota()">Guardar Mascota</button>
+                <button class="btn-danger" onclick="ocultarFormularioMascota()">Cancelar</button>
+            </div>
+            
+            <button onclick="siguientePaso(4)">Continuar →</button>
+        </section>
+
+        <!-- Paso 5: Mochila de Emergencia -->
+        <section id="paso5" class="paso hidden">
+            <h2><span>5</span> Mochila de Emergencia</h2>
+            <div class="info-box">
+                <strong>🎒 Recomendación SGR:</strong> Prepara una mochila por cada miembro de la familia y mantenla en lugar accesible. Revisa cada 6 meses.
+            </div>
+            
+            <h3 class="section-title">Varios</h3>
+            <div class="checklist">
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-linterna">
+                    <label for="item-linterna">Linterna</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-pilas">
+                    <label for="item-pilas">Pilas extras</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-velas">
+                    <label for="item-velas">Velas y fósforos/fosforera</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-mantas">
+                    <label for="item-mantas">Mantas</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-silbato">
+                    <label for="item-silbato">Silbato o pito</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-alimentos">
+                    <label for="item-alimentos">Alimentos no perecibles</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-agua">
+                    <label for="item-agua">Agua embotellada (2L por persona)</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-ropa">
+                    <label for="item-ropa">Ropa abrigada</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-documentos">
+                    <label for="item-documentos">Documentos personales (copias)</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-contactos">
+                    <label for="item-contactos">Libreta con contactos telefónicos</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-impermeables">
+                    <label for="item-impermeables">Impermeables</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-mascota">
+                    <label for="item-mascota">Alimento para tu mascota</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-radio">
+                    <label for="item-radio">Radio portátil</label>
+                </div>
+            </div>
+            
+            <h3 class="section-title">Kit de Aseo</h3>
+            <div class="checklist">
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-jabon">
+                    <label for="item-jabon">Jabón</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-pasta">
+                    <label for="item-pasta">Pasta dental</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-papel">
+                    <label for="item-papel">Papel higiénico</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-gel">
+                    <label for="item-gel">Gel antibacterial</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-toallas">
+                    <label for="item-toallas">Toallas sanitarias</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-preservativos">
+                    <label for="item-preservativos">Preservativos</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-champu">
+                    <label for="item-champu">Champú</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-cepillo">
+                    <label for="item-cepillo">Cepillo dental</label>
+                </div>
+            </div>
+            
+            <h3 class="section-title">Botiquín</h3>
+            <div class="checklist">
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-guantes">
+                    <label for="item-guantes">Guantes de látex</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-gasas">
+                    <label for="item-gasas">Gasas</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-tijeras">
+                    <label for="item-tijeras">Tijeras</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-esparadrapo">
+                    <label for="item-esparadrapo">Esparadrapo</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-vendas">
+                    <label for="item-vendas">Vendas</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-mascarillas">
+                    <label for="item-mascarillas">Mascarillas</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-curitas">
+                    <label for="item-curitas">Curitas</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-gafas">
+                    <label for="item-gafas">Gafas de protección</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-jabon-antiseptico">
+                    <label for="item-jabon-antiseptico">Jabón antiséptico</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="item-medicamentos">
+                    <label for="item-medicamentos">Medicamentos de uso regular</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Otros elementos importantes para tu familia:</label>
+                <textarea id="otros-elementos" placeholder="Ej: Medicamentos específicos, fórmula infantil, etc."></textarea>
+            </div>
+            
+            <button onclick="siguientePaso(5)">Continuar →</button>
+        </section>
+
+        <!-- Paso 6: Vulnerabilidad de la Vivienda -->
+        <section id="paso6" class="paso hidden">
+            <h2><span>6</span> Vulnerabilidad de la Vivienda</h2>
+            <div class="info-box">
+                <strong>🔍 Evaluación:</strong> Identifica las áreas más vulnerables de tu vivienda y las acciones para reducir riesgos.
+            </div>
+            
+            <div class="table-container">
+                <table id="tabla-vulnerabilidad">
+                    <thead>
+                        <tr>
+                            <th>Espacio Físico</th>
+                            <th>Vulnerabilidades</th>
+                            <th>Acciones de Mitigación</th>
+                            <th>Prioridad</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vulnerabilidad-body">
+                        <!-- Se llena dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn-add" onclick="mostrarFormularioVulnerabilidad()">➕ Agregar Área</button>
+            
+            <!-- Formulario flotante para vulnerabilidad -->
+            <div id="form-vulnerabilidad" class="hidden" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--color-primary);">
+                <h3>Evaluar Área de la Vivienda</h3>
+                <div class="form-group">
+                    <label class="required">Espacio físico:</label>
+                    <select id="espacio-vulnerabilidad">
+                        <option value="Toda la vivienda">Toda la vivienda</option>
+                        <option value="Sala">Sala</option>
+                        <option value="Comedor">Comedor</option>
+                        <option value="Dormitorio">Dormitorio</option>
+                        <option value="Cocina">Cocina</option>
+                        <option value="Baño">Baño</option>
+                        <option value="Patio">Patio</option>
+                        <option value="Escaleras">Escaleras</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="required">Vulnerabilidades identificadas:</label>
+                    <textarea id="vulnerabilidades" placeholder="Ej: Ventanas grandes sin protección sísmica, cables eléctricos expuestos"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="required">Acciones para reducir vulnerabilidad:</label>
+                    <textarea id="acciones-vulnerabilidad" placeholder="Ej: Instalar film de seguridad en ventanas, reorganizar cables"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Prioridad:</label>
+                    <select id="prioridad-vulnerabilidad">
+                        <option value="Alta">Alta</option>
+                        <option value="Media">Media</option>
+                        <option value="Baja">Baja</option>
+                    </select>
+                </div>
+                <button onclick="guardarVulnerabilidad()">Guardar Evaluación</button>
+                <button class="btn-danger" onclick="ocultarFormularioVulnerabilidad()">Cancelar</button>
+            </div>
+            
+            <button onclick="siguientePaso(6)">Continuar →</button>
+        </section>
+
+        <!-- Paso 7: Resumen y Consolidación -->
+        <section id="paso7" class="paso hidden">
+            <h2><span>7</span> Resumen del Plan Familiar</h2>
+            <div class="info-box" style="background-color: #d4edda; border-left-color: #28a745;">
+                <strong>✅ Plan Completo:</strong> Revisa toda la información antes de guardar. Puedes imprimir este plan para tenerlo físicamente.
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h3 style="color: var(--color-primary);">Información Familiar</h3>
+                    <div id="resumen-familia" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
+                    
+                    <h3 style="color: var(--color-primary);">Integrantes</h3>
+                    <div id="resumen-integrantes" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
+                    
+                    <h3 style="color: var(--color-primary);">Mascotas</h3>
+                    <div id="resumen-mascotas" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
+                </div>
+                <div>
+                    <h3 style="color: var(--color-primary);">Mapa de Ubicaciones</h3>
+                    <div id="map-resumen" class="map" style="height: 300px; margin-bottom: 20px;"></div>
+                    
+                    <h3 style="color: var(--color-primary);">Riesgos Identificados</h3>
+                    <div id="resumen-riesgos" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
+                    
+                    <h3 style="color: var(--color-primary);">Vulnerabilidades Principales</h3>
+                    <div id="resumen-vulnerabilidad" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px;"></div>
+                </div>
+            </div>
+            
+            <h3 style="color: var(--color-primary); margin-top: 20px;">Mochila de Emergencia</h3>
+            <div id="resumen-mochila" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
+            
+            <div style="margin-top: 30px; display: flex; justify-content: space-between;">
+                <button onclick="window.print()" style="background-color: var(--color-secondary); color: #333;">🖨️ Imprimir Plan</button>
+                <button onclick="guardarPlanCompleto()" style="background-color: var(--color-success);">💾 Guardar Plan Definitivo</button>
+            </div>
+        </section>
+
+        <footer>
+            © 2023 Secretaría de Gestión de Riesgos y Emergencias - Ecuador | 
+            <a href="https://www.gestionderiesgos.gob.ec" style="color: var(--color-secondary); text-decoration: none;">Visita nuestro sitio web</a>
+        </footer>
+    </div>
+
+    <!-- Leaflet JS + Plugins -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    
+    <script>
+        // Variables globales
+        let mapRiesgos, mapUbicaciones, mapResumen;
+        let currentMarker = null;
+        let puntosMapeados = [];
+        let familiares = [];
+        let mascotas = [];
+        let vulnerabilidades = [];
+        let riesgosSeleccionados = [];
+        let infoFamilia = {};
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            initRiskMap();
+            
+            // Datos de ejemplo (pueden borrarse)
+            familiares = [
+                {
+                    nombre: "Juan Pérez",
+                    edad: 35,
+                    sangre: "O+",
+                    parentesco: "Padre",
+                    discapacidad: "",
+                    responsabilidad: "Cortar servicios básicos",
+                    medicamentos: ""
+                },
+                {
+                    nombre: "María Gómez",
+                    edad: 8,
+                    sangre: "A+",
+                    parentesco: "Hija",
+                    discapacidad: "Asma",
+                    responsabilidad: "Llevar mochila personal",
+                    medicamentos: "Inhalador - cada 4 horas si es necesario"
+                }
+            ];
+            renderFamiliaTable();
+            
+            mascotas = [
+                {
+                    nombre: "Firulais",
+                    especie: "Perro",
+                    edad: 3,
+                    carnet: "123-456-789",
+                    esterilizado: "Sí",
+                    notas: "Vacunas al día, necesita correa especial"
+                }
+            ];
+            renderMascotasTable();
+            
+            vulnerabilidades = [
+                {
+                    espacio: "Toda la vivienda",
+                    vulnerabilidades: "Estructura antigua sin refuerzo sísmico",
+                    acciones: "Contratar evaluación estructural",
+                    prioridad: "Alta"
+                },
+                {
+                    espacio: "Cocina",
+                    vulnerabilidades: "Cilindro de gas sin sujeción",
+                    acciones: "Instalar abrazadera para cilindro",
+                    prioridad: "Alta"
+                }
+            ];
+            renderVulnerabilidadTable();
+        });
+        
+        // Mapa de riesgos
+        function initRiskMap() {
+            mapRiesgos = L.map('map-riesgos').setView([-0.2295, -78.5249], 6);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(mapRiesgos);
+            
+            // Capa de ejemplo con zonas de riesgo (en producción usar datos reales)
+            const zonasRiesgo = [
+                {
+                    coords: [[-0.25, -78.55], [-0.20, -78.50], [-0.22, -78.45]],
+                    tipo: "sismo",
+                    nombre: "Zona sísmica alta"
+                },
+                {
+                    coords: [[-0.15, -78.48], [-0.10, -78.45], [-0.12, -78.40]],
+                    tipo: "inundacion",
+                    nombre: "Zona inundable"
+                }
+            ];
+            
+            zonasRiesgo.forEach(zona => {
+                const polygon = L.polygon(zona.coords, {
+                    color: getColorForRisk(zona.tipo),
+                    fillOpacity: 0.3
+                }).addTo(mapRiesgos)
+                .bindPopup(`<b>${zona.nombre}</b>`);
+            });
+        }
+        
+        function getColorForRisk(tipo) {
+            const colors = {
+                'sismo': '#ff0000',
+                'inundacion': '#0000ff',
+                'volcan': '#8b4513',
+                'deslizamiento': '#a0522d',
+                'incendio': '#ff4500',
+                'sequia': '#ff8c00',
+                'tsunami': '#1e90ff'
+            };
+            return colors[tipo] || '#333';
+        }
+        
+        // Navegación entre pasos
+        function siguientePaso(pasoActual) {
+            // Guardar datos del paso actual
+            if (pasoActual === 0) {
+                infoFamilia = {
+                    apellidos: document.getElementById('apellidos-familia').value,
+                    direccion: document.getElementById('direccion-familia').value,
+                    telefonoCelular: document.getElementById('telefono-celular').value,
+                    telefonoConvencional: document.getElementById('telefono-convencional').value,
+                    ubicacion: document.getElementById('ubicacion-familia').value
+                };
+            }
+            
+            document.getElementById(`paso${pasoActual}`).classList.add('hidden');
+            document.getElementById(`paso${pasoActual + 1}`).classList.remove('hidden');
+            
+            // Inicializar mapas cuando se muestran
+            if (pasoActual === 1) initUbicacionesMap();
+            if (pasoActual === 6) generarResumen();
+        }
+        
+        // Mapa de ubicaciones
+        function initUbicacionesMap() {
+            mapUbicaciones = L.map('map-ubicaciones').setView([-0.2295, -78.5249], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapUbicaciones);
+            
+            mapUbicaciones.on('click', function(e) {
+                if (currentMarker) mapUbicaciones.removeLayer(currentMarker);
+                
+                currentMarker = L.marker(e.latlng, {
+                    draggable: true,
+                    icon: L.divIcon({
+                        className: 'custom-marker',
+                        html: '📍',
+                        iconSize: [30, 30]
+                    })
+                }).addTo(mapUbicaciones)
+                .bindPopup("Nuevo punto a registrar").openPopup();
+                
+                document.getElementById('coordenadas-punto').value = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+                
+                // Mostrar formulario automáticamente
+                mostrarFormularioPunto();
+            });
+        }
+        
+        // Funciones para puntos mapeados
+        function mostrarFormularioPunto() {
+            if (!currentMarker) {
+                alert("Primero selecciona un punto en el mapa");
+                return;
+            }
+            document.getElementById('form-punto').classList.remove('hidden');
+        }
+        
+        function ocultarFormularioPunto() {
+            document.getElementById('form-punto').classList.add('hidden');
+            document.getElementById('tipo-punto').value = "";
+            document.getElementById('nombre-punto').value = "";
+            document.getElementById('telefono-punto').value = "";
+            document.getElementById('direccion-punto').value = "";
+        }
+        
+        function guardarPunto() {
+            const tipo = document.getElementById('tipo-punto').value;
+            const nombre = document.getElementById('nombre-punto').value;
+            
+            if (!tipo || !nombre) {
+                alert("Debes completar al menos el tipo y nombre del punto");
+                return;
+            }
+            
+            const coords = document.getElementById('coordenadas-punto').value.split(', ');
+            const punto = {
+                tipo,
+                nombre,
+                telefono: document.getElementById('telefono-punto').value,
+                direccion: document.getElementById('direccion-punto').value,
+                lat: parseFloat(coords[0]),
+                lng: parseFloat(coords[1]),
+                icono: getIconForPointType(tipo)
+            };
+            
+            puntosMapeados.push(punto);
+            renderPuntosTable();
+            ocultarFormularioPunto();
+            
+            // Cambiar icono del marcador
+            currentMarker.setIcon(L.divIcon({
+                className: 'saved-marker',
+                html: punto.icono,
+                iconSize: [30, 30]
+            }));
+            currentMarker.bindPopup(`<b>${punto.nombre}</b><br>${punto.tipo}`).openPopup();
+        }
+        
+        function getIconForPointType(tipo) {
+            const icons = {
+                'vivienda': '🏠',
+                'hospital': '🏥',
+                'medico': '👨‍⚕️',
+                'familiar': '👪',
+                'seguro': '🛡️'
+            };
+            return icons[tipo] || '📍';
+        }
+        
+        function renderPuntosTable() {
+            const tbody = document.getElementById('puntos-body');
+            tbody.innerHTML = '';
+            
+            puntosMapeados.forEach((punto, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${punto.tipo}</td>
+                    <td>${punto.nombre}</td>
+                    <td><button onclick="eliminarPunto(${index})" style="padding: 5px 10px; background-color: var(--color-danger);">✕</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function eliminarPunto(index) {
+            puntosMapeados.splice(index, 1);
+            renderPuntosTable();
+        }
+        
+        // Funciones para familiares
+        function mostrarFormularioFamiliar() {
+            document.getElementById('form-familiar').classList.remove('hidden');
+        }
+        
+        function ocultarFormularioFamiliar() {
+            document.getElementById('form-familiar').classList.add('hidden');
+            document.getElementById('nombre-familiar').value = "";
+            document.getElementById('edad-familiar').value = "";
+            document.getElementById('sangre-familiar').value = "";
+            document.getElementById('parentesco-familiar').value = "Padre";
+            document.getElementById('discapacidad-familiar').value = "";
+            document.getElementById('responsabilidad-familiar').value = "";
+            document.getElementById('medicamentos-familiar').value = "";
+        }
+        
+        function guardarFamiliar() {
+            const nombre = document.getElementById('nombre-familiar').value;
+            const edad = document.getElementById('edad-familiar').value;
+            
+            if (!nombre || !edad) {
+                alert("Debes completar al menos el nombre y edad");
+                return;
+            }
+            
+            const familiar = {
+                nombre,
+                edad: parseInt(edad),
+                sangre: document.getElementById('sangre-familiar').value,
+                parentesco: document.getElementById('parentesco-familiar').value,
+                discapacidad: document.getElementById('discapacidad-familiar').value,
+                responsabilidad: document.getElementById('responsabilidad-familiar').value,
+                medicamentos: document.getElementById('medicamentos-familiar').value
+            };
+            
+            familiares.push(familiar);
+            renderFamiliaTable();
+            ocultarFormularioFamiliar();
+        }
+        
+        function renderFamiliaTable() {
+            const tbody = document.getElementById('familia-body');
+            tbody.innerHTML = '';
+            
+            familiares.forEach((familiar, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${familiar.nombre}</td>
+                    <td>${familiar.edad}</td>
+                    <td>${familiar.sangre || '-'}</td>
+                    <td>${familiar.parentesco}</td>
+                    <td>${familiar.discapacidad || '-'}</td>
+                    <td>${familiar.responsabilidad || '-'}</td>
+                    <td>${familiar.medicamentos || '-'}</td>
+                    <td>
+                        <button onclick="editarFamiliar(${index})" style="padding: 5px 10px; margin-right: 5px;">✏️</button>
+                        <button onclick="eliminarFamiliar(${index})" style="padding: 5px 10px; background-color: var(--color-danger);">✕</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function editarFamiliar(index) {
+            const familiar = familiares[index];
+            document.getElementById('nombre-familiar').value = familiar.nombre;
+            document.getElementById('edad-familiar').value = familiar.edad;
+            document.getElementById('sangre-familiar').value = familiar.sangre;
+            document.getElementById('parentesco-familiar').value = familiar.parentesco;
+            document.getElementById('discapacidad-familiar').value = familiar.discapacidad;
+            document.getElementById('responsabilidad-familiar').value = familiar.responsabilidad;
+            document.getElementById('medicamentos-familiar').value = familiar.medicamentos;
+            
+            // Eliminar el familiar existente si se guarda
+            familiares.splice(index, 1);
+            
+            mostrarFormularioFamiliar();
+        }
+        
+        function eliminarFamiliar(index) {
+            if (confirm("¿Estás seguro de eliminar este integrante familiar?")) {
+                familiares.splice(index, 1);
+                renderFamiliaTable();
+            }
+        }
+        
+        // Funciones para mascotas
+        function mostrarFormularioMascota() {
+            document.getElementById('form-mascota').classList.remove('hidden');
+        }
+        
+        function ocultarFormularioMascota() {
+            document.getElementById('form-mascota').classList.add('hidden');
+            document.getElementById('nombre-mascota').value = "";
+            document.getElementById('especie-mascota').value = "Perro";
+            document.getElementById('edad-mascota').value = "";
+            document.getElementById('carnet-mascota').value = "";
+            document.querySelector('input[name="esterilizado"][value="No"]').checked = true;
+            document.getElementById('notas-mascota').value = "";
+        }
+        
+        function guardarMascota() {
+            const nombre = document.getElementById('nombre-mascota').value;
+            const especie = document.getElementById('especie-mascota').value;
+            const edad = document.getElementById('edad-mascota').value;
+            
+            if (!nombre || !especie || !edad) {
+                alert("Debes completar al menos el nombre, especie y edad");
+                return;
+            }
+            
+            const mascota = {
+                nombre,
+                especie,
+                edad: parseInt(edad),
+                carnet: document.getElementById('carnet-mascota').value,
+                esterilizado: document.querySelector('input[name="esterilizado"]:checked').value,
+                notas: document.getElementById('notas-mascota').value
+            };
+            
+            mascotas.push(mascota);
+            renderMascotasTable();
+            ocultarFormularioMascota();
+        }
+        
+        function renderMascotasTable() {
+            const tbody = document.getElementById('mascotas-body');
+            tbody.innerHTML = '';
+            
+            mascotas.forEach((mascota, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${mascota.nombre}</td>
+                    <td>${mascota.especie}</td>
+                    <td>${mascota.edad}</td>
+                    <td>${mascota.carnet || '-'}</td>
+                    <td>${mascota.esterilizado}</td>
+                    <td>
+                        <button onclick="editarMascota(${index})" style="padding: 5px 10px; margin-right: 5px;">✏️</button>
+                        <button onclick="eliminarMascota(${index})" style="padding: 5px 10px; background-color: var(--color-danger);">✕</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function editarMascota(index) {
+            const mascota = mascotas[index];
+            document.getElementById('nombre-mascota').value = mascota.nombre;
+            document.getElementById('especie-mascota').value = mascota.especie;
+            document.getElementById('edad-mascota').value = mascota.edad;
+            document.getElementById('carnet-mascota').value = mascota.carnet || "";
+            document.querySelector(`input[name="esterilizado"][value="${mascota.esterilizado}"]`).checked = true;
+            document.getElementById('notas-mascota').value = mascota.notas || "";
+            
+            // Eliminar la mascota existente si se guarda
+            mascotas.splice(index, 1);
+            
+            mostrarFormularioMascota();
+        }
+        
+        function eliminarMascota(index) {
+            if (confirm("¿Estás seguro de eliminar esta mascota?")) {
+                mascotas.splice(index, 1);
+                renderMascotasTable();
+            }
+        }
+        
+        // Funciones para vulnerabilidad
+        function mostrarFormularioVulnerabilidad() {
+            document.getElementById('form-vulnerabilidad').classList.remove('hidden');
+        }
+        
+        function ocultarFormularioVulnerabilidad() {
+            document.getElementById('form-vulnerabilidad').classList.add('hidden');
+            document.getElementById('espacio-vulnerabilidad').value = "Toda la vivienda";
+            document.getElementById('vulnerabilidades').value = "";
+            document.getElementById('acciones-vulnerabilidad').value = "";
+            document.getElementById('prioridad-vulnerabilidad').value = "Alta";
+        }
+        
+        function guardarVulnerabilidad() {
+            const espacio = document.getElementById('espacio-vulnerabilidad').value;
+            const vulnerabilidadesText = document.getElementById('vulnerabilidades').value;
+            
+            if (!espacio || !vulnerabilidadesText) {
+                alert("Debes completar al menos el espacio y vulnerabilidades");
+                return;
+            }
+            
+            const vulnerabilidad = {
+                espacio,
+                vulnerabilidades: vulnerabilidadesText,
+                acciones: document.getElementById('acciones-vulnerabilidad').value,
+                prioridad: document.getElementById('prioridad-vulnerabilidad').value
+            };
+            
+            vulnerabilidades.push(vulnerabilidad);
+            renderVulnerabilidadTable();
+            ocultarFormularioVulnerabilidad();
+        }
+        
+        function renderVulnerabilidadTable() {
+            const tbody = document.getElementById('vulnerabilidad-body');
+            tbody.innerHTML = '';
+            
+            vulnerabilidades.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.espacio}</td>
+                    <td>${item.vulnerabilidades}</td>
+                    <td>${item.acciones}</td>
+                    <td>${item.prioridad}</td>
+                    <td>
+                        <button onclick="editarVulnerabilidad(${index})" style="padding: 5px 10px; margin-right: 5px;">✏️</button>
+                        <button onclick="eliminarVulnerabilidad(${index})" style="padding: 5px 10px; background-color: var(--color-danger);">✕</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function editarVulnerabilidad(index) {
+            const item = vulnerabilidades[index];
+            document.getElementById('espacio-vulnerabilidad').value = item.espacio;
+            document.getElementById('vulnerabilidades').value = item.vulnerabilidades;
+            document.getElementById('acciones-vulnerabilidad').value = item.acciones;
+            document.getElementById('prioridad-vulnerabilidad').value = item.prioridad;
+            
+            // Eliminar el item existente si se guarda
+            vulnerabilidades.splice(index, 1);
+            
+            mostrarFormularioVulnerabilidad();
+        }
+        
+        function eliminarVulnerabilidad(index) {
+            if (confirm("¿Estás seguro de eliminar esta evaluación de vulnerabilidad?")) {
+                vulnerabilidades.splice(index, 1);
+                renderVulnerabilidadTable();
+            }
+        }
+        
+        // Funciones para riesgos
+        function toggleRisk(element, riskType) {
+            element.classList.toggle('selected');
+            
+            const index = riesgosSeleccionados.indexOf(riskType);
+            if (index === -1) {
+                riesgosSeleccionados.push(riskType);
+            } else {
+                riesgosSeleccionados.splice(index, 1);
+            }
+        }
+        
+        // Generar resumen final
+        function generarResumen() {
+            // Inicializar mapa de resumen
+            mapResumen = L.map('map-resumen').setView([-0.2295, -78.5249], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapResumen);
+            
+            // Grupo de clusters
+            const markersCluster = L.markerClusterGroup();
+            
+            // Agregar todos los puntos mapeados
+            puntosMapeados.forEach(punto => {
+                const marker = L.marker([punto.lat, punto.lng], {
+                    icon: L.divIcon({
+                        html: punto.icono,
+                        iconSize: [30, 30],
+                        className: 'resumen-marker'
+                    })
+                }).bindPopup(`
+                    <b>${punto.nombre}</b><br>
+                    <em>${punto.tipo}</em><br>
+                    ${punto.telefono ? `Tel: ${punto.telefono}<br>` : ''}
+                    ${punto.direccion || ''}
+                `);
+                markersCluster.addLayer(marker);
+            });
+            
+            mapResumen.addLayer(markersCluster);
+            
+            // Generar resumen de información familiar
+            const resumenFamilia = document.getElementById('resumen-familia');
+            resumenFamilia.innerHTML = `
+                <p><strong>Apellidos:</strong> ${infoFamilia.apellidos || 'No especificado'}</p>
+                <p><strong>Dirección:</strong> ${infoFamilia.direccion || 'No especificado'}</p>
+                <p><strong>Teléfono celular:</strong> ${infoFamilia.telefonoCelular || 'No especificado'}</p>
+                <p><strong>Teléfono convencional:</strong> ${infoFamilia.telefonoConvencional || 'No especificado'}</p>
+                <p><strong>Ubicación:</strong> ${infoFamilia.ubicacion || 'No especificado'}</p>
+            `;
+            
+            // Generar resumen de integrantes
+            const resumenIntegrantes = document.getElementById('resumen-integrantes');
+            resumenIntegrantes.innerHTML = `
+                <p><strong>Total integrantes:</strong> ${familiares.length}</p>
+                <ul>
+                    ${familiares.map(f => `
+                        <li>
+                            <strong>${f.nombre}</strong> (${f.edad} años, ${f.parentesco})<br>
+                            ${f.discapacidad ? `<em>Condición especial: ${f.discapacidad}</em><br>` : ''}
+                            ${f.medicamentos ? `<em>Medicamentos: ${f.medicamentos}</em><br>` : ''}
+                            <small>Responsabilidad: ${f.responsabilidad || 'No asignada'}</small>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+            
+            // Generar resumen de mascotas
+            const resumenMascotas = document.getElementById('resumen-mascotas');
+            resumenMascotas.innerHTML = `
+                <p><strong>Total mascotas:</strong> ${mascotas.length}</p>
+                <ul>
+                    ${mascotas.map(m => `
+                        <li>
+                            <strong>${m.nombre}</strong> (${m.especie}, ${m.edad} años)<br>
+                            <em>Carnet: ${m.carnet || 'No registrado'}</em><br>
+                            <em>Esterilizado: ${m.esterilizado}</em><br>
+                            ${m.notas ? `<small>Notas: ${m.notas}</small>` : ''}
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+            
+            // Generar resumen de riesgos
+            const resumenRiesgos = document.getElementById('resumen-riesgos');
+            resumenRiesgos.innerHTML = `
+                <p><strong>Riesgos identificados:</strong></p>
+                <ul>
+                    ${riesgosSeleccionados.map(riesgo => `<li>${getRiskName(riesgo)}</li>`).join('')}
+                    ${document.getElementById('otros-riesgos').value ? 
+                      `<li>Otros: ${document.getElementById('otros-riesgos').value}</li>` : ''}
+                </ul>
+            `;
+            
+            // Generar resumen de vulnerabilidad
+            const resumenVulnerabilidad = document.getElementById('resumen-vulnerabilidad');
+            resumenVulnerabilidad.innerHTML = `
+                <p><strong>Áreas críticas:</strong></p>
+                <ul>
+                    ${vulnerabilidades.filter(v => v.prioridad === "Alta").map(v => `
+                        <li>
+                            <strong>${v.espacio}</strong><br>
+                            ${v.vulnerabilidades}<br>
+                            <em>Acciones: ${v.acciones}</em>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+            
+            // Generar resumen de mochila de emergencia
+            const resumenMochila = document.getElementById('resumen-mochila');
+            resumenMochila.innerHTML = `
+                <p><strong>Elementos esenciales:</strong></p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <h4>Varios</h4>
+                        <ul>
+                            <li>${document.getElementById('item-linterna').checked ? '✓' : '✗'} Linterna</li>
+                            <li>${document.getElementById('item-pilas').checked ? '✓' : '✗'} Pilas extras</li>
+                            <li>${document.getElementById('item-velas').checked ? '✓' : '✗'} Velas y fósforos</li>
+                            <li>${document.getElementById('item-mantas').checked ? '✓' : '✗'} Mantas</li>
+                            <li>${document.getElementById('item-silbato').checked ? '✓' : '✗'} Silbato</li>
+                            <li>${document.getElementById('item-alimentos').checked ? '✓' : '✗'} Alimentos no perecibles</li>
+                            <li>${document.getElementById('item-agua').checked ? '✓' : '✗'} Agua embotellada</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Botiquín</h4>
+                        <ul>
+                            <li>${document.getElementById('item-guantes').checked ? '✓' : '✗'} Guantes de látex</li>
+                            <li>${document.getElementById('item-gasas').checked ? '✓' : '✗'} Gasas</li>
+                            <li>${document.getElementById('item-tijeras').checked ? '✓' : '✗'} Tijeras</li>
+                            <li>${document.getElementById('item-vendas').checked ? '✓' : '✗'} Vendas</li>
+                            <li>${document.getElementById('item-mascarillas').checked ? '✓' : '✗'} Mascarillas</li>
+                            <li>${document.getElementById('item-medicamentos').checked ? '✓' : '✗'} Medicamentos</li>
+                        </ul>
+                    </div>
+                </div>
+                ${document.getElementById('otros-elementos').value ? `
+                <p><strong>Otros elementos importantes:</strong></p>
+                <p>${document.getElementById('otros-elementos').value}</p>
+                ` : ''}
+            `;
+        }
+        
+        function getRiskName(riskType) {
+            const names = {
+                'sismo': 'Sismos/Terremotos',
+                'inundacion': 'Inundaciones',
+                'volcan': 'Actividad Volcánica',
+                'deslizamiento': 'Movimiento de Ladera',
+                'incendio': 'Incendios Forestales',
+                'sequia': 'Sequía',
+                'tsunami': 'Tsunami'
+            };
+            return names[riskType] || riskType;
+        }
+        
+        // Guardar plan completo
+        function guardarPlanCompleto() {
+            const planCompleto = {
+                infoFamilia,
+                riesgos: riesgosSeleccionados,
+                otrosRiesgos: document.getElementById('otros-riesgos').value,
+                puntosMapeados,
+                familiares,
+                mascotas,
+                vulnerabilidades,
+                mochila: {
+                    varios: {
+                        linterna: document.getElementById('item-linterna').checked,
+                        pilas: document.getElementById('item-pilas').checked,
+                        velas: document.getElementById('item-velas').checked,
+                        mantas: document.getElementById('item-mantas').checked,
+                        silbato: document.getElementById('item-silbato').checked,
+                        alimentos: document.getElementById('item-alimentos').checked,
+                        agua: document.getElementById('item-agua').checked,
+                        ropa: document.getElementById('item-ropa').checked,
+                        documentos: document.getElementById('item-documentos').checked,
+                        contactos: document.getElementById('item-contactos').checked,
+                        impermeables: document.getElementById('item-impermeables').checked,
+                        mascota: document.getElementById('item-mascota').checked,
+                        radio: document.getElementById('item-radio').checked
+                    },
+                    aseo: {
+                        jabon: document.getElementById('item-jabon').checked,
+                        pasta: document.getElementById('item-pasta').checked,
+                        papel: document.getElementById('item-papel').checked,
+                        gel: document.getElementById('item-gel').checked,
+                        toallas: document.getElementById('item-toallas').checked,
+                        preservativos: document.getElementById('item-preservativos').checked,
+                        champu: document.getElementById('item-champu').checked,
+                        cepillo: document.getElementById('item-cepillo').checked
+                    },
+                    botiquin: {
+                        guantes: document.getElementById('item-guantes').checked,
+                        gasas: document.getElementById('item-gasas').checked,
+                        tijeras: document.getElementById('item-tijeras').checked,
+                        esparadrapo: document.getElementById('item-esparadrapo').checked,
+                        vendas: document.getElementById('item-vendas').checked,
+                        mascarillas: document.getElementById('item-mascarillas').checked,
+                        curitas: document.getElementById('item-curitas').checked,
+                        gafas: document.getElementById('item-gafas').checked,
+                        jabonAntiseptico: document.getElementById('item-jabon-antiseptico').checked,
+                        medicamentos: document.getElementById('item-medicamentos').checked
+                    },
+                    otros: document.getElementById('otros-elementos').value
+                },
+                fecha: new Date().toLocaleString('es-EC', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })
+            };
+            
+            // Simulación de guardado (en producción usar Supabase)
+            localStorage.setItem('planFamiliarCompleto', JSON.stringify(planCompleto));
+            alert('✅ Plan familiar guardado exitosamente');
+            
+            /* 
+            // Código para Supabase:
+            supabase.from('planes_familiares').insert([{
+                info_familia: infoFamilia,
+                riesgos: riesgosSeleccionados,
+                otros_riesgos: document.getElementById('otros-riesgos').value,
+                puntos_mapeados: puntosMapeados,
+                integrantes: familiares,
+                mascotas,
+                vulnerabilidades,
+                mochila: planCompleto.mochila,
+                user_id: 'usuario_actual' // Reemplazar con autenticación
+            }]);
+            */
+        }
+    </script>
+</body>
+</html>
